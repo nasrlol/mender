@@ -1,0 +1,12 @@
+[package]
+name = "mender"
+version = "0.1.0"
+edition = "2024"
+authors = ["nasr <nsrddyn@gmail.com>"]
+description  = "build system for vorthur"
+
+[[bin]]
+name = "mender"
+path = "main.rs"
+test = true
+bench = true
