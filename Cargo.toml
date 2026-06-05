@@ -7,6 +7,6 @@ description  = "build system for vorthur"
 
 [[bin]]
 name = "mender"
-path = "main.rs"
+path = "src/main.rs"
 test = true
 bench = true

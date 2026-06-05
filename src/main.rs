@@ -6,21 +6,14 @@
 use std::env;
 use std::process::Command;
 
-const OUTPUT_DIR: &str = "./isofiles";
-const FILE_NAME: &str = "vorthur-kernel.bin";
-const ISO_FILE: &str = "vorthur.iso";
-
-// Grub configuration
-const GRUB_TIMEOUT: u8 = 5;
-const GRUB_DEFAULT: u8 = 0;
-const GRUB_ENTRY: &str = "vorthur";
-
-struct AnvilConfig {
+struct Config  {
     timeout: u8,
-    default: u8,
+    _default: u8,
     entry: String,
-    iso_directory: String,
-    iso_file_name: String,
+/// output dir, isofiles
+    dir: String,
+/// file, vorthur_kernel.bin
+    file: String,
 }
 
 fn is_debug_build() -> bool {
@@ -33,19 +26,7 @@ fn cargo_command() -> Command {
     command
 }
 
-impl AnvilConfig {
-    fn new(iso_directory: String, iso_file_name: String) -> Self {
-        AnvilConfig {
-            timeout: GRUB_TIMEOUT,
-            default: GRUB_DEFAULT,
-            entry: GRUB_ENTRY.to_string(),
-            iso_directory,
-            iso_file_name,
-        }
-    }
-}
-
-fn build() {
+fn build(cfg : Config) {
     if is_debug_build() {
         println!("INFO: Starting kernel build process...");
         let build_status = cargo_command()
@@ -53,7 +34,7 @@ fn build() {
                 "build",
                 "-Z", "json-target-spec",
                 "-Z", "build-std=core,alloc",
-                "--target-dir", OUTPUT_DIR,
+                "--target-dir", cfg.output,
             ])
             .status();
 
@@ -136,12 +117,7 @@ fn run_vm() {
     }
 }
 
-fn load_config_file(_path: &str) {
-    // Placeholder for ACL parsing.
-    // The build tool currently only needs the file to exist so the CLI can start.
-}
-
-fn build_grub_config(config: &AnvilConfig) -> String {
+fn build_grub_config(config: &Config) -> String {
     format!(
         "set timeout={}\nset default={}\nmenuentry \"{}\" {{\n  # TODO: Add boot configuration\n}}\n",
         config.timeout, config.default, config.entry
@@ -153,18 +129,44 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
 				let default_location: &str = "./mender.acl";
-				load_config_file(default_location);
+
+let cfg : &Config = Anvil::new(); 
+//- command line arguments handling
 
     if args.len() < 2 {
-        eprintln!("Usage: cargo run [run|build|test|setup]");
+        eprintln!("Usage: mender run [run|build|test|setup]");
         return;
     }
 
     let command = &args[1];
 
     match command.as_str() {
+"--config" => {
+
+
+//- load config -- refactor, inlined from the previous function
+// call the lexer on the buffer, parse the tokens, and build the config 
+{
+
+let file_path : &str =  &args[2]
+
+if &args[2] == "" {
+                _ => panic!("[ERROR] invalid path"),
+				}   
+				
+    let buffer = fs::read_to_string(file_path)
+        .expect("[ERROR] Failed to read file");
+
+lexer : Lexer = scan_tokens(buffer);
+
+
+}
+
+
+}
         "build" => {
             println!("INFO: Building kernel...");
+
             build();
         }
         "run" => {
@@ -185,8 +187,8 @@ fn main() {
             setup_dev_env();
         }
         _ => {
-            eprintln!("Unknown command: {}", command);
-            eprintln!("Available commands: build, run, test, setup");
+            println!("Unknown command: {}", command);
+            println!("Available commands: build, run, test, setup");
         }
     }
 }
