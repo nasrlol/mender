@@ -1,0 +1,46 @@
+
+src/main.rs,2019
+struct mender_ast<'a> {mender_ast13,311
+    root: *mut mender_node<'a>,root14,335
+struct mender_node<'a> {mender_node17,370
+    token:       mender_token<'a>,token18,395
+    next_node:   *mut mender_node<'a>,next_node19,430
+    parent_node: *mut mender_node<'a>,parent_node20,469
+struct mender_lexer<'a> {mender_lexer25,534
+    position: u8,position26,560
+    tokens:   Vec<mender_token<'a>>,tokens27,578
+    buffer:   &'a str,buffer28,615
+struct mender_token<'a> {mender_token31,641
+    lexeme:     &'a str,lexeme32,667
+    token_type: mender_token_type,token_type33,692
+enum mender_token_type {mender_token_type36,730
+    Undefined,Undefined37,755
+    String,String38,770
+    Integer,Integer39,782
+    Declaration,Declaration40,795
+    OpenBrace,OpenBrace41,812
+    CloseBrace,CloseBrace42,827
+    OpenBracket,OpenBracket43,843
+    CloseBracket,CloseBracket44,860
+    Slash,Slash45,878
+struct mender_config<'a> {mender_config49,911
+    timeout:  u8,timeout50,938
+    _default: u8,_default51,956
+    entry:    String,entry52,974
+    dir:      &'a str,dir53,996
+    file:     &'a str,file54,1019
+fn is_numeric(character: u8) -> bool {is_numeric59,1075
+fn is_rune_alpha(character: u8) -> bool {is_rune_alpha64,1182
+fn is_alpha(character: u8) -> bool {is_alpha69,1334
+fn is_whitespace(character: u8) -> bool {is_whitespace74,1481
+fn nil_mender_node<'a>() -> mender_node<'a> {nil_mender_node80,1599
+fn scan_tokens<'a>(buffer: &'a str) -> mender_lexer<'a> {scan_tokens93,1955
+fn build_ast(lexer: mender_lexer) -> mender_ast {build_ast174,4012
+fn is_debug_build() -> bool {is_debug_build180,4129
+fn cargo_command() -> Command {cargo_command184,4189
+fn build(cfg: mender_config) {build190,4329
+fn build_iso(iso_file: &str, output_dir: &str) {build_iso228,5509
+fn setup_dev_env() {setup_dev_env242,5961
+fn run_vm() {run_vm264,6664
+fn build_grub_config(_config: &mender_config) -> String {build_grub_config290,7643
+fn main() {main295,7769
