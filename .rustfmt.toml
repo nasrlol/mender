@@ -1,4 +1,4 @@
-max_width = 10000000
+max_width = 100
 indent_style = "Block"
 
 normalize_comments = true
@@ -7,7 +7,8 @@ reorder_imports = false
 brace_style = "PreferSameLine"
 comment_width = 100
 
-struct_field_align_threshold = 0
+# Struct formatting: align fields and preserve struct names in camelCase
+struct_field_align_threshold = 20
 struct_lit_single_line = false
 
 edition = "2021"
@@ -38,7 +39,7 @@ newline_style = "Unix"
 use_small_heuristics = "Default"
 ignore = []
 
-unstable_features = false
+unstable_features = true
 control_brace_style = "AlwaysSameLine"
 imports_layout = "Mixed"
 group_imports = "Preserve"
@@ -48,3 +49,6 @@ blank_lines_lower_bound = 0
 hex_literal_case = "Preserve"
 float_literal_trailing_zero = "Preserve"
 skip_macro_invocations = []
+
+# Note: Struct names must be manually kept in camelCase (PascalCase).
+# Rustfmt does not enforce naming conventions; ensure struct definitions follow naming guidelines.

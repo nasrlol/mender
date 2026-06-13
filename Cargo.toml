@@ -10,3 +10,6 @@ name = "mender"
 path = "src/main.rs"
 test = true
 bench = true
+
+[lints.rust]
+non_camel_case_types = "allow"
