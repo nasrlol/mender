@@ -77,23 +77,19 @@ fn is_whitespace(character: u8) -> bool {
 
 //- ast helpers
 
-//- nil nodes, 
-static nil_mender_node<'a>() -> mender_node<'a> {
-    return mender_node {
-        token:       mender_token {
-            lexeme:     "",
-            token_type: mender_token_type::String,
-        },
-        next_node:   std::ptr::null_mut(),
-        parent_node: std::ptr::null_mut(),
-    };
-}
+//- nil nodes,
+const nil_mender_node: mender_node = mender_node {
+    token:       mender_token {
+        lexeme:     "",
+        token_type: mender_token_type::String,
+    },
+    next_node:   std::ptr::null_mut(),
+    parent_node: std::ptr::null_mut(),
+};
 
-static nil_mender_ast<'a>() -> mender_ast<'a> {
-    return mender_ast {
-        root: std::ptr::null_mut(),
-    };
-}
+const nil_mender_ast: mender_ast = mender_ast {
+    root: std::ptr::null_mut(),
+};
 
 //- lexical implementatoin
 // TODO(nasr): rewrite this garbage
@@ -175,13 +171,6 @@ fn scan_tokens<'a>(buffer: &'a str) -> mender_lexer<'a> {
     }
 
     return lexer;
-}
-
-// parser
-fn build_ast(lexer: mender_lexer) -> mender_ast {
-    let tree: mender_ast = nil_mender_ast();
-
-    return tree;
 }
 
 fn is_debug_build() -> bool {

@@ -4,3 +4,4 @@ Cargo.lock
 /isofiles
 /build
 /mender.exe
+/mender-tool
