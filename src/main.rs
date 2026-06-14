@@ -77,7 +77,8 @@ fn is_whitespace(character: u8) -> bool {
 
 //- ast helpers
 
-fn nil_mender_node<'a>() -> mender_node<'a> {
+//- nil nodes, 
+static nil_mender_node<'a>() -> mender_node<'a> {
     return mender_node {
         token:       mender_token {
             lexeme:     "",
@@ -88,7 +89,7 @@ fn nil_mender_node<'a>() -> mender_node<'a> {
     };
 }
 
-fn nil_mender_ast<'a>() -> mender_ast<'a> {
+static nil_mender_ast<'a>() -> mender_ast<'a> {
     return mender_ast {
         root: std::ptr::null_mut(),
     };
