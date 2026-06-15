@@ -1,0 +1,98 @@
+//- ast definitions
+struct mender_ast<'a> {
+    root:    *mut mender_node<'a>,
+    current: *mut mener_node<'a>,
+}
+
+// are the lifetimes correct
+struct mender_node<'a> {
+    token: mender_token<'a>,
+
+    next_node:   Option<Box<mender_node<'a>>>,
+    parent_node: Option<&'a mender_node<'a>>,
+    child_node:  Vec<mender_node<'a>>,
+}
+
+struct mender_node<'a> {}
+
+//- Ast helpers
+
+//- nil nodes,
+const nil_mender_node: mender_node = mender_node {
+    token:       mender_token {
+        lexeme:     "",
+        token_type: token_type::String,
+    },
+    next_node:   std::ptr::null_mut(),
+    parent_node: std::ptr::null_mut(),
+};
+
+// a section starts with an open brace and ends with a closing brace
+// all the values are children of the parent value
+fn handle_tokens_section(starting_index: i32, tokens: lexer::token) {
+    let mut index: i32 = starting_index;
+    while tokens[index] != lexer::token_type::CloseBrace {
+        index += 1;
+    }
+}
+
+fn build_ast_based_on_token_stream<'a>(lexer: mender_lexer) -> mender_ast<'a> {
+    // TODO(nasr): find out how to fill in the null types
+    const tree: mender_ast = mender_ast {
+        root: mender_node {
+            token:       mender_token {
+                lexeme:     "",
+                token_type: token_type::Undefined,
+            },
+            next_node:   std::ptr::null_mut(),
+            parent_node: std::ptr::nul_mut(),
+        },
+
+        current: mender_node {
+            token:       mender_token {
+                lexeme:     "",
+                token_type: token_type::Undefined,
+            },
+            next_node:   std::ptr::null_mut(),
+            parent_node: std::ptr::nul_mut(),
+        },
+    };
+
+    for (index, token) in lexer.tokens {
+        match token.token_type {
+            token_type::Undefined => {
+                // panic out
+                eprintln("[ERROR] syntax error in acl. {}", token);
+            }
+
+            token_type::String => {
+                if token.current.parent_node.token_type == token_type::Declaration {
+                    let node: mender_node = mender_node {};
+
+                    tree.current.children.push(node);
+                }
+            }
+
+            token_type::Integer => if root.current.token_type == token_type::Declaration {},
+            token_type::Declaration => if lexer.tokens[idx + 1].token_type == mender::token_type::token_open_brace {},
+            token_type::OpenBrace => {
+                handle_token_section();
+            }
+
+            token_type::CloseBrace => {
+                // NOTE(nasr): this gets handlesd in the section handler
+                continue;
+            }
+
+            // TODO(nasr): handle arrays
+            token_type::OpenBracket => {}
+            token_type::CloseBracket => {}
+
+            token_type::Slash => {
+                if token.next_token.token_type == lexer::token_type::Slash {
+                    skip_until_reaching_slash(lexer::token_type::Slash);
+                }
+            }
+        }
+    }
+}
