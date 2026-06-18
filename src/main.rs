@@ -27,12 +27,6 @@ struct mender_config<'a> {
     sections: Vec<mender_tokens_config>,
 }
 
-struct mender_config_section<'a> {
-    name:      &'a str,
-    value_str: &'a str,
-    value_dec: i32,
-}
-
 fn is_debug_build() -> bool {
     cfg!(debug_assertions)
 }

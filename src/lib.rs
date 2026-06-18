@@ -1,5 +1,7 @@
 //- lexer definitions
 
+use std::collections::HashMap;
+
 pub struct mender_token<'a> {
     pub lexeme:     &'a str,
     pub token_type: token_type,
@@ -21,6 +23,13 @@ pub struct mender_lexer<'a> {
     pub tokens:   Vec<token<'a>>,
     // the lifetime of the buffer lasts longer i think because we build the tokens a while later
     pub buffer:   &'a str,
+}
+
+
+struct mender_config_section<'a> {
+    name:      &'a str,
+
+    values:    HashMap<str, any>,
 }
 
 //- lexical helpers
@@ -48,7 +57,7 @@ fn is_whitespace(character: u8) -> bool {
 // TODO(nasr): rewrite this garbage
 pub fn scan_tokens<'a>(buffer: &'a str) -> lexer<'a, 'a> {
     let mut lexer = mender_lexer {
-        buffer,
+        buffer: buffer,
         position: 0,
         tokens: Vec::new(),
     };
@@ -135,7 +144,6 @@ struct mender_ast<'a> {
 
 // are the lifetimes correct
 struct mender_node {
-    toke: mender_token,
 
     // we store the indeces and we can act on them as the pointers to the global node struct
     // thne a mender node really is just a pointer and doesnt hold any values
@@ -147,9 +155,28 @@ struct mender_node {
 //- Ast helpers
 // a section starts with an open brace and ends with a closing brace
 // all the values are children of the parent value
-fn handle_tokens_section(starting_index: i32, tokens: token) {
+
+// the starting index can now be derivde
+fn handle_tokens_section(section_name: &str, starting_index: i32, length: i32, tokens: token) {
+
+    // TODO: how do you determine end the string in rust
+    // TODO: find the first bracket
+
     let mut index: i32 = starting_index;
-    while tokens[index] != token_type::CloseBrace {
+
+    while tokens[index] != length {
+
+        if tokens[index] != (token_type::CloseBrace) {
+
+            //- scan for the last section
+            new_section : mender_config_section {
+
+                name:      section_name,
+
+		// TODO: fill in the values into a hashmap
+            }
+        }
+
         index += 1;
     }
 }
@@ -162,21 +189,18 @@ fn build_ast_based_on_token_stream<'a>(lexer: mender_lexer) -> mender_ast<'a> {
                 lexeme:     "",
                 token_type: token_type::Undefined,
             },
-            next_node:   std::ptr::null_mut(),
-            parent_node: std::ptr::nul_mut(),
+            next_node:   Some(0),
+            parent_node: Some(0),
         },
 
         current: mender_node {
-            token:       mender_token {
-                lexeme:     "",
-                token_type: token_type::Undefined,
-            },
-            next_node:   std::ptr::null_mut(),
-            parent_node: std::ptr::nul_mut(),
+            next_node:   Some(0),
+            parent_node: Some(0),
+	    child_node:  Some(0),
         },
     };
 
-    for (index, token) in lexer.tokens {
+    for (index, current_token) in lexer.tokens {
         match token.token_type {
             token_type::Undefined => {
                 // panic out
@@ -187,14 +211,21 @@ fn build_ast_based_on_token_stream<'a>(lexer: mender_lexer) -> mender_ast<'a> {
                 if token.current.parent_node.token_type == token_type::Declaration {
                     let node: mender_node = mender_node {};
 
-                    tree.current.children.push(node);
+                    current_token.children.push(node);
                 }
             }
 
             token_type::Integer => if root.current.token_type == token_type::Declaration {},
             token_type::Declaration => if lexer.tokens[idx + 1].token_type == mender::token_type::token_open_brace {},
             token_type::OpenBrace => {
-                handle_token_section();
+
+                // check if the previous token is of the type token_type::Declaration
+                if lexer.tokens[index - 1] == token_type::Declaration {
+
+                    handle_token_section(lexer.tokens[index - 1], index, lexer.tokens.lenght(), token);
+
+                }
+
             }
 
             token_type::CloseBrace => {
