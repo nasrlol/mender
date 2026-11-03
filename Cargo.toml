@@ -3,7 +3,7 @@ name = "mender"
 version = "0.1.0"
 edition = "2021"
 authors = ["nasr <nsrddyn@gmail.com>"]
-description  = "build system for vorthur"
+description  = "build system "
 
 [[bin]]
 name = "mender"

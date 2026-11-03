@@ -1,37 +1,174 @@
 /// ! June 01 21:59 - nasr
-/// ! build script for the kernel
-/// ! generates an iso in the ./build folder
-/// ! setup code for setting up the dev environment
-/// ! lexer and parser for acl
-/// ! loads file from config
-/// ! single pass
+/// ! build tool
+/// ! Inspired by nob.h ( by Mr. Zozin )
 use std::env;
 use std::process::Command;
 use std::fs;
 
 mod mender_lexer;
 mod mender_ast;
+//- lexer definitions
+
+use std::collections::HashMap;
+
+static COMMON_FLAGS: Vec<&str> = ["-g"];
+
+pub struct mender_token<'a> {
+    pub lexeme:     &'a str,
+    pub token_type: token_type,
+}
+
+#[inline]
+fn is_numeric(character: u8) -> bool {
+    return (character >= b'0') && (character <= b'9');
+}
+
+#[inline]
+fn is_rune_alpha(character: u8) -> bool {
+    return (character >= b'A' && character <= b'Z') || (character >= b'a' && character <= b'z');
+}
+
+#[inline]
+fn is_alpha(character: u8) -> bool {
+    return (character >= b'A' && character <= b'Z') || (character >= b'a' && character <= b'z');
+}
+
+#[inline]
+fn is_whitespace(character: u8) -> bool {
+    return (character == b'\n') && (character == b' ');
+}
+
+//- ast definitions
+struct mender_ast<'a> {
+    nodes:       Vec<mender_node>,
+    root_idx:    usize,
+    current_idx: usize,
+}
+
+// are the lifetimes correct
+struct mender_node {
+	
+    // we store the indeces and we can act on them as the pointers to the global node struct
+    // thne a mender node really is just a pointer and doesnt hold any values
+    next_node:   Option<usize>,
+    parent_node: Option<usize>,
+    child_node:  Option<usize>,
+}
+
+//- Ast helpers
+// a section starts with an open brace and ends with a closing brace
+// all the values are children of the parent value
+
+// the starting index can now be derivde
+fn handle_tokens_section(section_name: &str, starting_index: i32, length: i32, tokens: token) {
+	
+    // TODO: how do you determine end the string in rust
+    // TODO: find the first bracket
+	
+    let mut index: i32 = starting_index;
+	
+    while tokens[index] != length {
+		
+        if tokens[index] != (token_type::CloseBrace) {
+			
+            //- scan for the last section
+            new_section : mender_config_section {
+				
+                name:      section_name,
+				
+				// TODO: fill in the values into a hashmap
+            }
+        }
+		
+        index += 1;
+    }
+}
+
+fn build_ast_based_on_token_stream<'a>(lexer: mender_lexer) -> mender_ast<'a> {
+    // TODO(nasr): find out how to fill in the null types
+    const tree: mender_ast = mender_ast {
+        root: mender_node {
+            token:       mender_token {
+                lexeme:     "",
+                token_type: token_type::Undefined,
+            },
+            next_node:   Some(0),
+            parent_node: Some(0),
+        },
+		
+        current: mender_node {
+            next_node:   Some(0),
+            parent_node: Some(0),
+			child_node:  Some(0),
+        },
+    };
+	
+    for (index, current_token) in lexer.tokens {
+        match token.token_type {
+            token_type::Undefined => {
+                // panic out
+                eprintln("[ERROR] syntax error in acl. {}", token);
+            }
+			
+            token_type::String => {
+                if token.current.parent_node.token_type == token_type::Declaration {
+                    let node: mender_node = mender_node {};
+					
+                    current_token.children.push(node);
+                }
+            }
+			
+            token_type::Integer => if root.current.token_type == token_type::Declaration {},
+            token_type::Declaration => if lexer.tokens[idx + 1].token_type == mender::token_type::token_open_brace {},
+            token_type::OpenBrace => {
+				
+                // check if the previous token is of the type token_type::Declaration
+                if lexer.tokens[index - 1] == token_type::Declaration {
+					
+                    handle_token_section(lexer.tokens[index - 1], index, lexer.tokens.lenght(), token);
+					
+                }
+				
+            }
+			
+            token_type::CloseBrace => {
+                // NOTE(nasr): this gets handlesd in the section handler
+                continue;
+            }
+			
+            // TODO(nasr): handle arrays
+            token_type::OpenBracket => {}
+            token_type::CloseBracket => {}
+			
+            token_type::Slash => {
+                if token.next_token.token_type == token_type::Slash {
+                    skip_until_reaching_slash(token_type::Slash);
+                }
+            }
+        }
+    }
+}
+
+
 
 const fields: &str = ["paths", "grub", "build", "vm", "envirnoment"];
 
 //- general config
-struct mender_config<'a> {
-    //////////////////
-    // TODO(nasr): build the known configurations
+struct target<'a> {
+compiler: &'str,
     timeout:  u8,
     _default: u8,
     entry:    String,
     dir:      &'a str,
     file:     &'a str,
-    //////////////////
-    sections: Vec<mender_tokens_config>,
+project:  &'a str
 }
-
+s
 fn is_debug_build() -> bool {
     cfg!(debug_assertions)
 }
 
-fn cargo_command() -> Command {
+fn command() -> Command {
     let mut command = Command::new("rustup");
     command.args(["run", "nightly", "cargo"]);
     return command;
@@ -66,66 +203,6 @@ fn build(cfg: mender_config) {
     }
 }
 
-fn build_iso(iso_file: &str, output_dir: &str) {
-    let iso_status = Command::new("grub-mkrescue").args(&["-o ", iso_file, output_dir]).status();
-
-    match iso_status {
-        Ok(status) if status.success() => {
-            println!("INFO: ISO creation completed successfully.");
-        }
-        Ok(_) => panic!("[ERROR] ISO creation failed"),
-        Err(e) => panic!("[ERROR] Failed to execute grub-mkrescue: {}", e),
-    }
-}
-
-fn setup_dev_env() {
-    if is_debug_build() {
-        println!("INFO: Setting up development environment...");
-
-        let hook_status = Command::new("git").args(&["config", "core.hooksPath", ".githooks"]).status();
-
-        match hook_status {
-            Ok(status) if status.success() => {
-                println!("INFO: Git hooks configured successfully.");
-                // TODO: Ensure .githooks have correct executable permissions
-            }
-            _ => println!("WARNING: Failed to configure git hooks"),
-        }
-
-        println!("cargo:rerun-if-changed=build.rs");
-    } else {
-        println!("INFO: Not in debug profile, skipping setup.");
-    }
-}
-
-fn run_vm() {
-    if is_debug_build() {
-        // Check if qemu is available
-        let qemu_check = Command::new("qemu-system-x86_64").args(&["--version"]).status();
-
-        match qemu_check {
-            Ok(status) if status.success() => {
-                println!("INFO: QEMU found, proceeding with VM launch...");
-                // 1. Generate the ISO file using grub based on the ./isofiles folder
-                // 2. Compile the kernel
-                // 3. Move the kernel to the correct place
-                // 4. Start the VM with the kernel
-
-                // TODO(nasr): fill in the appropriate values
-                build_iso("", "");
-                println!("INFO: Starting QEMU with kernel...");
-                // TODO: Launch QEMU with appropriate arguments
-            }
-            _ => panic!("Install QEMU first. Install the correct version while you're at it."),
-        }
-    }
-}
-
-// TODO(nasr): use the config parameter
-fn build_grub_config(_config: &mender_config) -> String {
-    // TODO(nasr): replace with a string builder
-    format!("")
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
