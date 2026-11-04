@@ -7,7 +7,7 @@ description  = "build system "
 
 [[bin]]
 name = "mender"
-path = "src/main.rs"
+path = "mender.rs"
 test = true
 bench = true
 

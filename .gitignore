@@ -5,3 +5,6 @@ Cargo.lock
 /build
 /mender.exe
 /mender-tool
+/.dir-locals.el
+/.session.4coder
+*.txt
