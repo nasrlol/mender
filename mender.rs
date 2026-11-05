@@ -5,12 +5,28 @@ use std::fs;
 use std::env;
 use std::process::Command;
 use std::ffi::OsString;
+use std::thread;
+use std::time::Duration;
 
 fn build_self() -> std::io::Result<()> {
-    const CC: &str = "rustc";
-    let dir = env::current_dir()?;
 
-    let args: Vec<OsString> = vec!["--edition=2021".into(), dir.join("mender.rs").into(), "-o".into(), dir.join("mender").into()];
+    
+    let target = Target {
+
+	cc: "rustc",
+	target: "mender.rs",
+	out: "mender",
+	out_dir: env::current_dir()?,
+	args: vec!["--edition=2021".into(), dir.join("mender.rs").into(), "-o".into(), dir.join("mender").into()],
+	tests: &[],
+	tests_dir: vec![],
+	tests_args: vec![],
+    }
+
+    const CC: &str = "rustc";
+    let dir = 
+
+    let args: Vec<OsString> = 
 
     let mut build_output = Command::new(CC);
 
@@ -26,18 +42,35 @@ fn build_self() -> std::io::Result<()> {
     Ok(())
 }
 
+struct Target {
+    cc: &str,
+    target: &str,
+    out: String,
+    out_dir: &str,
+    args: Vec<OsString>,
+    tests: &[&str],
+    tests_dir: Vec<OsString>,
+    tests_args: Vec<OsString>,
+    
+}
+
+fn build(target: Target) {
+    if cfg!(target_os = "windows") {
+        target.out.append(".exe");
+    }
+
+    println!("building target");
+
+    let mut build_output = Command::new(COMPILER);
+    build_output.arg(format!("{} -o {}/{}", TARGET, TARGET_DIRECTORY, OUT));
+
+    for arg in COMMON_ARGS {
+        build_output.arg(arg);
+    }
+}
+
 fn main() -> std::io::Result<()> {
-    #[cfg(target_os = "windows")]
-    const OUT: &str = "foo.exe";
-
-    #[cfg(target_os = "linux")]
-    const OUT: &str = "foo";
-
     const DIRECTORIES: &[&str] = &["build", "tests"];
-    const COMPILER: &str = "gcc";
-    const TARGET: &str = "bar.c";
-    const TARGET_DIRECTORY: &str = "source";
-    const COMMON_ARGS: &[&str] = &["-g", "-wno-unused"];
 
     for dir in DIRECTORIES {
         fs::create_dir_all(dir)?;
@@ -49,16 +82,6 @@ fn main() -> std::io::Result<()> {
         if fs::metadata("mender.rs")?.modified()? > fs::metadata("mender")?.modified()? {
             println!("building self");
             build_self()?;
-        }
-    }
-
-    // handle target after
-    {
-        let mut build_output = Command::new(COMPILER);
-        build_output.arg(format!("{} -o {}/{}", TARGET, TARGET_DIRECTORY, OUT));
-
-        for arg in COMMON_ARGS {
-            build_output.arg(arg);
         }
     }
 
