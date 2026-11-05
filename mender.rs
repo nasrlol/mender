@@ -4,33 +4,39 @@
 use std::fs;
 use std::env;
 use std::process::Command;
+use std::path::PathBuf;
 use std::ffi::OsString;
 use std::thread;
 use std::time::Duration;
 
+struct Target {
+    cc: &'static str,
+    target: &'static str,
+    out: String,
+    out_dir: PathBuf,
+    args: Vec<OsString>,
+    tests: &'static [&'static str],
+    tests_dir: Vec<OsString>,
+    tests_args: Vec<OsString>,
+}
+
 fn build_self() -> std::io::Result<()> {
+    let dir = env::current_dir()?;
 
-    
     let target = Target {
+        cc: "rustc",
+        target: "mender.rs",
+        out: String::from("mender"),
+        args: vec!["--edition=2021".into(), dir.join("mender.rs").into(), "-o".into(), dir.join("mender").into()],
+        out_dir: dir,
+        tests: &[],
+        tests_dir: vec![],
+        tests_args: vec![],
+    };
 
-	cc: "rustc",
-	target: "mender.rs",
-	out: "mender",
-	out_dir: env::current_dir()?,
-	args: vec!["--edition=2021".into(), dir.join("mender.rs").into(), "-o".into(), dir.join("mender").into()],
-	tests: &[],
-	tests_dir: vec![],
-	tests_args: vec![],
-    }
+    let mut build_output = Command::new(target.cc);
 
-    const CC: &str = "rustc";
-    let dir = 
-
-    let args: Vec<OsString> = 
-
-    let mut build_output = Command::new(CC);
-
-    for arg in args {
+    for arg in target.args {
         build_output.arg(arg);
     }
 
@@ -42,29 +48,17 @@ fn build_self() -> std::io::Result<()> {
     Ok(())
 }
 
-struct Target {
-    cc: &str,
-    target: &str,
-    out: String,
-    out_dir: &str,
-    args: Vec<OsString>,
-    tests: &[&str],
-    tests_dir: Vec<OsString>,
-    tests_args: Vec<OsString>,
-    
-}
-
-fn build(target: Target) {
+fn build(mut target: Target) {
     if cfg!(target_os = "windows") {
-        target.out.append(".exe");
+        target.out.push_str(".exe");
     }
 
     println!("building target");
 
-    let mut build_output = Command::new(COMPILER);
-    build_output.arg(format!("{} -o {}/{}", TARGET, TARGET_DIRECTORY, OUT));
+    let mut build_output = Command::new(target.cc);
+    build_output.arg(format!("{} -o {}/{}", target.target, target.out_dir.display(), target.out));
 
-    for arg in COMMON_ARGS {
+    for arg in target.args {
         build_output.arg(arg);
     }
 }
@@ -83,6 +77,25 @@ fn main() -> std::io::Result<()> {
             println!("building self");
             build_self()?;
         }
+    }
+
+    // compile
+    {
+        let dir = env::current_dir()?;
+        let src = "compiler.cpp";
+        let out = "compiler";
+
+        let target = Target {
+            cc: "g++",
+            target: src,
+            out: String::from("./build/compiler"),
+            args: vec![dir.join(src).into(), "-o".into(), dir.join(out).into()],
+            out_dir: dir,
+            tests: &[],
+            tests_dir: vec![],
+            tests_args: vec![],
+        };
+        build(target);
     }
 
     Ok(())
