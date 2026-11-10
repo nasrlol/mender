@@ -63,7 +63,18 @@ fn build(mut target: Target) {
     }
 }
 
-fn main() -> std::io::Result<()> {
+fn old_rec(file: &str) -> std::io::Result<()> {
+    let old = format!("{file}.old");
+    if fs::exists(file)? {
+        println!("{file} already exists. renaming it to {file}.old");
+        old_rec(&old);
+    }
+
+    fs::rename(file, &old)
+}
+
+#[tokio::main]
+async fn main() {
     const DIRECTORIES: &[&str] = &["build", "tests"];
 
     for dir in DIRECTORIES {
@@ -72,9 +83,13 @@ fn main() -> std::io::Result<()> {
     }
 
     // compile self if modified
+    // TODO: bug make this write a temporary name first
+    // then we rename to the regular one
+
     {
         if fs::metadata("mender.rs")?.modified()? > fs::metadata("mender")?.modified()? {
             println!("building self");
+            old_rec("mender");
             build_self()?;
         }
     }
@@ -97,6 +112,4 @@ fn main() -> std::io::Result<()> {
         };
         build(target);
     }
-
-    Ok(())
 }
